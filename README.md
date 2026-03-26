@@ -4,6 +4,8 @@ A collection of professional-grade shaders for **Godot 4.x** designed to achieve
 ### Key Features
 
 #### Anime SDF Face Shader (Dynamic Symmetry)
+![sdf](preview_sdf.webp)
+
 Unlike basic Cel Shaders, this shader uses **SDF (Signed Distance Fields)** textures to project facial shadows.
 * **Symmetry Logic:** Automatically detects light direction and flips the shadow map UVs. This ensures nose and cheek shadows remain artistic and clean from any angle.
 * **World-Space Stability:** Calculations are performed in World Space. Shadows won't "wobble" or deform when the camera rotates.
@@ -14,6 +16,8 @@ Optimized for clothing, hair, and the character's body.
 * **Rim Light:** Integrated perimeter glow to help the character pop from the background.
 
 #### Dynamic Outline
+![outline](preview_outline.webp)
+
 A procedural outline system that adjusts in real-time.
 * **Z-Depth Scaling:** Thickness scales based on camera distance. No more oversized outlines at a distance or invisible lines up close.
 * **Unshaded Performance:** Highly optimized to bypass unnecessary lighting passes.
