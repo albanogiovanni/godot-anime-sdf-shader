@@ -26,3 +26,7 @@ A procedural outline system that adjusts in real-time.
 ### File Structure & Naming
 * `*.gdshader` → Standard Godot Shader Code
 * `*_vshader.tres` → VisualShader Resource (Node-based)
+
+
+## Video Tutorial & Demo
+[![Godot 4 Anime Shader Tutorial](https://img.youtube.com/vi/PloOLUxYvBo/maxresdefault.jpg)](https://www.youtube.com/watch?v=PloOLUxYvBo)
