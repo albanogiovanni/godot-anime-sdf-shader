@@ -28,5 +28,5 @@ A procedural outline system that adjusts in real-time.
 * `*_vshader.tres` → VisualShader Resource (Node-based)
 
 
-## Video Tutorial & Demo
+## Video Tutorial & Demo (Español)
 [![Godot 4 Anime Shader Tutorial](https://img.youtube.com/vi/PloOLUxYvBo/maxresdefault.jpg)](https://www.youtube.com/watch?v=PloOLUxYvBo)
