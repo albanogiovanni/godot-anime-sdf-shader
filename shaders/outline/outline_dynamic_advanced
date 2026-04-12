@@ -1,0 +1,71 @@
+// Outline shader using the Inverted-Hull technique.
+// Designed for complex meshes like anime-style hair.
+shader_type spatial;
+
+// cull_front: Draws only the back faces of the mesh (the inside).
+// unshaded, shadows_disabled, etc.: Disables lighting calculations to get a flat color.
+// depth_draw_opaque: Writes to the depth buffer to prevent Z-fighting with the base mesh.
+render_mode blend_mix, depth_draw_opaque, depth_test_default, cull_front, specular_disabled, unshaded, shadows_disabled, ambient_light_disabled;
+
+// APPEARANCE PARAMETERS
+// Overall outline thickness.
+uniform float thickness : hint_range(0.0, 2.0) = 0.01;
+// Pushes the outline back in the depth buffer to prevent it from clipping through overlapping meshes (e.g., hair strands).
+uniform float depth_offset : hint_range(-0.5, 0.5) = 0.001; 
+
+// DISTANCE PARAMETERS
+// Maximum camera distance where outline thickness is compensated by perspective.
+// Beyond this distance, the outline will shrink along with the 3D model.
+uniform float thickness_max_distance : hint_range(0.0, 100.0) = 1.0;
+// Camera distance at which the depth pushback (depth_offset) gradually fades to zero.
+uniform float depth_fade_distance : hint_range(1.0, 100.0) = 1.0;
+
+// COLOR AND TEXTURE PARAMETERS
+uniform vec4 outline_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform sampler2D albedo_texture : source_color, filter_linear_mipmap;
+uniform float alpha_scissor_threshold : hint_range(0.0, 1.0) = 0.5;
+
+void vertex() {
+    // 1. CLIP SPACE TRANSFORMATION
+    vec4 clip_pos = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+    // We use the default geometric normal (NORMAL) for the extrusion direction.
+    vec2 clip_normal = (PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xy;
+
+    // 2. ASPECT RATIO CORRECTION
+    // Prevents the outline from being thicker on the horizontal axis in rectangular resolutions (e.g., 16:9).
+    vec2 viewport_size = VIEWPORT_SIZE;
+    float aspect_ratio = viewport_size.y / viewport_size.x;
+    clip_normal.x *= aspect_ratio; 
+
+    // Scale adjustment to make editing easier in the Godot inspector.
+    float real_thickness = thickness / 100.0;
+    float real_depth = depth_offset / 100.0;
+
+    // 3. XY EXTRUSION (SCREEN SPACE THICKNESS)
+    // clip_pos.w represents the distance to the camera. Multiplying by W cancels the native perspective divide,
+    // keeping the thickness constant on screen, but we cap it with thickness_max_distance to prevent self-intersections.
+    float perspective_factor = min(clip_pos.w, thickness_max_distance);
+    clip_pos.xy += normalize(clip_normal) * real_thickness * perspective_factor;
+    
+    // 4. Z-DEPTH COMPENSATION WITH FADE
+    // Calculates a multiplier ranging from 1.0 (camera close) to 0.0 (reaches depth_fade_distance).
+    float depth_fade = clamp(1.0 - (clip_pos.w / depth_fade_distance), 0.0, 1.0);
+    // Pushes vertices backward (positive Z in Clip Space) weighted by the fade and current perspective.
+    clip_pos.z += real_depth * clip_pos.w * depth_fade;
+
+    // Assigns the final modified position, bypassing the engine's default transformation.
+    POSITION = clip_pos;
+}
+
+void fragment() {
+    // Reads the model's base texture (e.g., hair texture).
+    vec4 tex_color = texture(albedo_texture, UV);
+    
+    // Multiplies the outline alpha by the texture alpha. 
+    // If the texture has transparent areas (e.g., torn hair tips), the outline is hidden in those areas.
+    ALPHA = outline_color.a * tex_color.a;
+    ALPHA_SCISSOR_THRESHOLD = alpha_scissor_threshold;
+    
+    // Applies the flat color.
+    ALBEDO = outline_color.rgb;
+}
